@@ -63,6 +63,7 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
         void _indicateExitWithStatus(unsigned int status) noexcept;
         static std::wstring _formatStatus(uint32_t status);
         void _LastConPtyClientDisconnected() noexcept;
+        void _autoAnswerTerminateBatchJobPrompt(const std::wstring_view& wstr);
 
         til::CoordType _rows = 120;
         til::CoordType _cols = 30;
@@ -76,6 +77,9 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
 
         bool _receivedFirstByte{ false };
         std::chrono::high_resolution_clock::time_point _startTime{};
+
+        std::atomic<int64_t> _lastCtrlCNanos{ 0 };
+        std::wstring _autoAnswerScanBuffer{};
 
         wil::unique_hfile _pipe;
         wil::unique_handle _hOutputThread;

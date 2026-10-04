@@ -554,6 +554,12 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
     {
         const auto data = winrt_array_to_wstring_view(buffer);
 
+        if (data.find(L";3;1;") != std::wstring_view::npos)
+        {
+            const auto nowNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            _lastCtrlCNanos.store(nowNs, std::memory_order_relaxed);
+        }
+
         if (!_isConnected())
         {
             return;
@@ -734,6 +740,36 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
         return commandline.to_hstring();
     }
 
+    void ConptyConnection::_autoAnswerTerminateBatchJobPrompt(const std::wstring_view& wstr)
+    {
+        static constexpr std::wstring_view prompt{ L"Terminate batch job (Y/N)? " };
+        static constexpr auto window = std::chrono::seconds(5);
+
+        _autoAnswerScanBuffer.append(wstr);
+
+        const auto pos = _autoAnswerScanBuffer.find(prompt);
+        if (pos != std::wstring::npos)
+        {
+            const auto nowNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            const auto lastCtrlCNs = _lastCtrlCNanos.load(std::memory_order_relaxed);
+
+            if (std::chrono::nanoseconds(nowNs - lastCtrlCNs) <= window)
+            {
+                _lastCtrlCNanos.store(0, std::memory_order_relaxed);
+                Sleep(50);
+                WriteInput(winrt_wstring_to_array_view(std::wstring_view{ L"y\r" }));
+            }
+
+            _autoAnswerScanBuffer.clear();
+            return;
+        }
+
+        if (_autoAnswerScanBuffer.size() > prompt.size())
+        {
+            _autoAnswerScanBuffer.erase(0, _autoAnswerScanBuffer.size() - (prompt.size() - 1));
+        }
+    }
+
     DWORD ConptyConnection::_OutputThread()
     {
         // Keep us alive until the output thread terminates; the destructor
@@ -791,6 +827,8 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
                                       TelemetryPrivacyDataTag(PDT_ProductAndServicePerformance));
                     _receivedFirstByte = true;
                 }
+
+                _autoAnswerTerminateBatchJobPrompt(wstr);
 
                 try
                 {
