@@ -1,3 +1,14 @@
+# what is this
+
+A patched copy of windows terminal that will auto answer yes to "Terminate batch job (Y/N)?".
+
+DISCLAIMER: AI SLOP. Working for me though.
+
+My brain is also too smooth to remember how to do all the msix bullshit, so I added  build_package.ps1 which should build the whole thing into bin/AppPackages. If you're lazy and trust you can get a prebuilt binary from https://github.com/wheybags/windowsterminal_batquitfix/releases. Run install.bat to add my anonmyous cert and force install.
+
+
+# Original readme
+
 ![Windows Terminal project logos and branding image](https://github.com/microsoft/terminal/assets/91625426/333ddc76-8ab2-4eb4-a8c0-4d7b953b1179)
 
 [![Terminal Build Status](https://dev.azure.com/shine-oss/terminal/_apis/build/status%2FTerminal%20CI?branchName=main)](https://dev.azure.com/shine-oss/terminal/_build/latest?definitionId=1&branchName=main)
