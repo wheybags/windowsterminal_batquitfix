@@ -753,11 +753,11 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
             const auto nowNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
             const auto lastCtrlCNs = _lastCtrlCNanos.load(std::memory_order_relaxed);
 
-            if (std::chrono::nanoseconds(nowNs - lastCtrlCNs) <= window)
+            if (lastCtrlCNs != 0 && std::chrono::nanoseconds(nowNs - lastCtrlCNs) <= window)
             {
-                _lastCtrlCNanos.store(0, std::memory_order_relaxed);
+                _lastCtrlCNanos.store(nowNs, std::memory_order_relaxed);
                 Sleep(50);
-                WriteInput(winrt_wstring_to_array_view(std::wstring_view{ L"y\r" }));
+                WriteInput(winrt_wstring_to_array_view(std::wstring_view{ L"\x1b[67;46;3;1;8;1_\x1b[67;46;3;0;8;1_" }));
             }
 
             _autoAnswerScanBuffer.clear();

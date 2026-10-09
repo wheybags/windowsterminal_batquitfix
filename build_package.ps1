@@ -49,6 +49,12 @@ function Find-DevEnv
         "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.com")
 }
 
+winget configure --enable
+if ($LASTEXITCODE -ne 0)
+{
+    throw "winget configure --enable failed with exit code $LASTEXITCODE"
+}
+
 winget configure (Join-Path $root ".config\configuration.winget") --accept-configuration-agreements
 if ($LASTEXITCODE -ne 0)
 {
